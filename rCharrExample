@@ -1,0 +1,45 @@
+library(rCharts)
+options(scipen=5)
+date_played=c('2014-01-01', '2014-01-02', '2014-01-03', '2014-01-04', '2014-01-05', '2014-01-06', '2014-01-07', '2014-01-08', '2014-01-09', '2014-01-10')
+PartidasPerDau=c(5.7, 6.2, 7.9, 7.5, 8.0, 7.3, 6.8, 7.5, 8.2, 6.9)
+
+df<-data.frame(PartidasPerDau=as.numeric(PartidasPerDau), date_played=as.character(date_played))
+
+df$series<-'Actual'
+dfNR<-nrow(df)
+# head(df, 14)
+
+# Calculate 7 day rolling avg
+for (row in 7:dfNR){
+
+df<-
+  rbind(df,
+        c(as.numeric(mean(df[c((row-7):row),1]))
+          , as.character(df$date_played[row])
+          , 'Rolling Average'))
+df$PartidasPerDau<-as.numeric(df$PartidasPerDau)
+}
+
+df$date_played<-as.Date(df$date_played)
+
+df<-transform(df, date_played2 = paste("#!", as.numeric(as.Date(as.character(date_played)))*86400000, "!#"))
+
+
+a <- hPlot(y="PartidasPerDau", x="date_played2", group='series', data=df, type='line')
+
+a$chart(zoomType="x")
+a$title(text="Number of Matches per DAU")
+a$subtitle(text=paste("THis is a subtitle"))
+
+
+a$yAxis(title=list(text=yAxisKPI), allowDecimals = FALSE, startOnTick = T)
+a$tooltip(formatter = "#! function() { return '<b>'  + this.series.name + '</b>' +
+'<br/>Number of Matches per DAU: '    + this.point.y;
+} !#")
+a$xAxis(title = list(text = "Date"), type = "datetime", labels = list(
+  format = '{value:%Y-%m-%d}', rotation = 45, align = "left"
+))
+a$exporting(enabled = T)
+
+
+a
